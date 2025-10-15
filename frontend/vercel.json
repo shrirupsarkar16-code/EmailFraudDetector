@@ -1,23 +1,8 @@
 {
-  "version": 2,
-  "name": "email-fraud-frontend",
   "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "frontend/dist"
-      }
-    }
+    { "src": "frontend/package.json", "use": "@vercel/static-build", "config": { "distDir": "frontend/dist" } }
   ],
   "routes": [
-    {
-      "src": "/auth/gmail/callback",
-      "dest": "/frontend/dist/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/dist/$1"
-    }
+    { "src": "/(.*)", "dest": "/frontend/dist/$1" }
   ]
 }

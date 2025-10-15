@@ -3,11 +3,9 @@ import { ShieldCheck } from 'lucide-react'
 
 export default function App() {
   const handleLogin = () => {
-    // Use production URL in production, fallback to localhost for development
-    const apiUrl = import.meta.env.PROD 
-      ? 'https://email-scam-detector-api.onrender.com/auth'
-      : 'http://localhost:5000/auth';
-    window.location.href = apiUrl;
+    const apiBase = import.meta.env.VITE_API_BASE 
+      || (import.meta.env.PROD ? 'https://email-fraud-detector-see8.onrender.com' : 'http://localhost:8000');
+    window.location.href = `${apiBase}/auth`;
   };
 
   return (

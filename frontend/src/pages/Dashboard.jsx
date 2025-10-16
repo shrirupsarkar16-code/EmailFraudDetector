@@ -1,20 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export default function Dashboard() {
   const [emails, setEmails] = useState([])
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const doScan = async () => {
       try {
         setLoading(true)
-        let apiBase = import.meta.env.VITE_API_BASE
-        if (!apiBase) {
-          const origin = `${window.location.protocol}//${window.location.host}`
-          apiBase = (window.location.port === '5000') ? origin : 'http://localhost:5000'
-        }
-        const res = await fetch(`${apiBase}/api/scan`, { method: 'POST', credentials: 'include' })
+        const backendUrl = import.meta.env.VITE_BACKEND_URL
+        const res = await fetch(`${backendUrl}/api/scan`, { 
+          method: 'POST', 
+          credentials: 'include' 
+        })
+        
         if (!res.ok) {
           const body = await res.json().catch(() => ({}))
           throw new Error(body?.error || `Scan failed (${res.status})`)
@@ -25,6 +27,11 @@ export default function Dashboard() {
         try { sessionStorage.setItem('scan_result', JSON.stringify(list)) } catch {}
         setError(null)
       } catch (e) {
+        // Check if unauthorized
+        if (e.message.includes('401')) {
+          navigate('/')
+          return
+        }
         // Fallback to any existing session results if available
         const stored = sessionStorage.getItem('scan_result')
         if (stored) {
@@ -36,7 +43,7 @@ export default function Dashboard() {
       }
     }
     doScan()
-  }, [])
+  }, [navigate])
 
   const stats = useMemo(() => {
     const total = emails.length
@@ -137,5 +144,3 @@ export default function Dashboard() {
     </div>
   )
 }
-
-

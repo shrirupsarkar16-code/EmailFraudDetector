@@ -9,23 +9,19 @@ export default function App() {
   const navigate = useNavigate()
 
   const handleLogin = () => {
-    let apiBase = import.meta.env.VITE_API_BASE;
-    if (!apiBase) {
-      const origin = `${window.location.protocol}//${window.location.host}`;
-      apiBase = (window.location.port === '5000') ? origin : 'http://localhost:5000';
-    }
-    window.location.href = `${apiBase}/auth`;
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    window.location.href = `${backendUrl}/auth`;
   };
 
   const handleScan = async () => {
     try {
       setLoading(true)
-      let apiBase = import.meta.env.VITE_API_BASE;
-      if (!apiBase) {
-        const origin = `${window.location.protocol}//${window.location.host}`;
-        apiBase = (window.location.port === '5000') ? origin : 'http://localhost:5000';
-      }
-      const res = await fetch(`${apiBase}/api/scan`, { method: 'POST', credentials: 'include' })
+      const backendUrl = import.meta.env.VITE_BACKEND_URL;
+      const res = await fetch(`${backendUrl}/api/scan`, { 
+        method: 'POST', 
+        credentials: 'include' 
+      })
+      
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         throw new Error(body?.error || `Scan failed (${res.status})`)
@@ -39,17 +35,32 @@ export default function App() {
       navigate('/dashboard')
     } catch (e) {
       setError(e.message)
+      if (e.message.includes('401')) {
+        // If unauthorized, redirect to login
+        navigate('/')
+      }
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    // If redirected back to backend origin after OAuth, trigger scan automatically
-    if (window.location.port === '5000') {
-      handleScan().catch(() => {})
-    }
-  }, [])
+    // Check if we have an active session
+    const checkSession = async () => {
+      try {
+        const backendUrl = import.meta.env.VITE_BACKEND_URL;
+        const res = await fetch(`${backendUrl}/api/session`, { 
+          credentials: 'include' 
+        });
+        if (res.ok) {
+          handleScan().catch(() => {});
+        }
+      } catch (e) {
+        console.error('Session check failed:', e);
+      }
+    };
+    checkSession();
+  }, []);
 
   const stats = React.useMemo(() => {
     if (!emails) return null
@@ -76,7 +87,8 @@ export default function App() {
         <div className="flex flex-col gap-4">
           <button
             onClick={handleLogin}
-            className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold rounded-xl transition-transform transform hover:scale-[1.02] flex items-center justify-center gap-2 shadow-lg"
+            disabled={loading}
+            className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold rounded-xl transition-transform transform hover:scale-[1.02] flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
               <path d="M4 4h16v16H4z" />
@@ -155,4 +167,3 @@ export default function App() {
     </div>
   );
 }
-

@@ -21,14 +21,16 @@ def clean_text(text):
     return text
 
 def extract_features(email_record):
-    text = clean_text((email_record.get('body','') or '') + ' ' + (email_record.get('subject','') or ''))
+    original_body = email_record.get('body','') or ''
+    text = clean_text(original_body + ' ' + (email_record.get('subject','') or ''))
     # Simple tokenization & stopword filtering (no external models)
     SIMPLE_STOPWORDS = set([
         'the','a','an','and','or','but','if','to','of','in','on','for','with','at','by','from','as','is','are','was','were','be','been','it','this','that','these','those','you','your','yours','we','us','our','they','their','them','he','she','his','her','its','not','no','do','does','did','can','could','should','would','will','just','about','into','out','up','down','over','under'
     ])
     tokens = [t for t in re.findall(r'[a-z]{3,}', text) if t not in SIMPLE_STOPWORDS]
     token_text = ' '.join(tokens)
-    link_count = len(re.findall(r'http', email_record.get('body', '') or ''))
+    links = re.findall(r'https?://[^\s>\)\"]+', original_body)
+    link_count = len(links)
     cap_count = sum(1 for c in (email_record.get('body','') or '') if c.isupper())
     body_len = max(len(email_record.get('body','') or ''),1)
     capital_ratio = cap_count / body_len
@@ -37,6 +39,7 @@ def extract_features(email_record):
         'text': token_text,
         'link_count': link_count,
         'capital_ratio': capital_ratio,
-        'keyword_count': keyword_count
+        'keyword_count': keyword_count,
+        'links': links
     }
 

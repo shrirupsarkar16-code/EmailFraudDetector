@@ -18,6 +18,3 @@ Thumbs.db
 .pytest_cache/
 .coverage
 .coverage.*
-backend/.env*
-frontend/node_modules/
-backend/__pycache__/
